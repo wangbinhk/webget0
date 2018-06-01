@@ -22,8 +22,8 @@ def get_html_text(keyword):
         try:
             res = requests.get('http://www.zou114.com/sanzidaima/index.asp', params=keyword, headers = headers, timeout=3)
             get_html = 1
-        except requests.exceptions.ConnectTimeout:
-            print("----------------------------------------------请求超时:"+res.url)
+        except:
+            print("----------------------------------------------请求超时:"+keyword)
 
     res.encoding = 'gb2312'
     #print(res.text)
@@ -73,23 +73,25 @@ def insert_data(airports):
 
 par_zms = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
 #par_zms = ['a']
+start_parm = ''
 fail_page = []
 for par_zm in par_zms:
     for i in range(1,100):
         keyword = 'zm='+par_zm+'&page='+str(i)
-        print("开始抓取：",keyword,"------")
-        page_text = get_html_text(keyword)
-        airports = get_airpot_list(page_text)
-        #print(airports)
-        if airports.__len__() == 0 :
-            print("par_zm ",par_zm," finish: ",keyword)
-            break
-        r = insert_data(airports)
-        if r == -1:
-            fail_page.append(keyword)
-            print("------------------------------------------------抓取失败：",keyword)
-        else:
-            print("抓取成功：",keyword)
-        time.sleep(10)
+        if keyword > start_parm :
+            print("开始抓取：",keyword,"------")
+            page_text = get_html_text(keyword)
+            airports = get_airpot_list(page_text)
+            #print(airports)
+            if airports.__len__() == 0 :
+                print("par_zm ",par_zm," finish: ",keyword)
+                break
+            r = insert_data(airports)
+            if r == -1:
+                fail_page.append(keyword)
+                print("------------------------------------------------抓取失败：",keyword)
+            else:
+                print("抓取成功：",keyword)
+            time.sleep(10)
 
 print("抓取失败结果：",fail_page)
