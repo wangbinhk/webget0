@@ -6,8 +6,6 @@ import traceback
 import sys
 import io
 
-#sys.stdout = io.TextIOWrapper(sys.stdout.buffer,encoding='gb18030') #改变标准输出的默认编码
-#sys.stdout = io.TextIOWrapper(sys.stdout.buffer,encoding='utf-8')
 def get_html_text(keyword):
     headers = {"Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
                "Accept-Encoding":"gzip, deflate",
@@ -51,21 +49,31 @@ def get_airpot_list(html_text):
     #print(airports)
     return airports
 
+def clear_tmp_data():
+    conn = cx_Oracle.connect('la_dw/oracle123@ladw_41')
+    c = conn.cursor()
+
+    print("清空临时表数据")
+    r = c.execute("truncate table tmp_webget_airport")
+
+    c.close()
+    conn.close()
+
 def insert_data(airports):
     conn = cx_Oracle.connect('la_dw/oracle123@ladw_41')
     c = conn.cursor()
 
-    r = c.execute("SELECT COUNT(*) FROM t_webget_airport1")
+    r = c.execute("SELECT COUNT(*) FROM tmp_webget_airport")
     print("插入前",c.fetchone())
 
     try:
-        c.executemany('insert into t_webget_airport1(iata,airport_en,airport_cn, country) values(:iata,:airport_en,:airport_cn, :country)',airports);
+        c.executemany('insert into tmp_webget_airport(iata,airport_en,airport_cn, country) values(:iata,:airport_en,:airport_cn, :country)',airports);
         conn.commit()
     except:
         traceback.print_exc()
         return -1
 
-    r = c.execute("SELECT COUNT(*) FROM t_webget_airport1")
+    r = c.execute("SELECT COUNT(*) FROM tmp_webget_airport")
     print("插入后",c.fetchone())
 
     c.close()
@@ -75,6 +83,9 @@ par_zms = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','
 #par_zms = ['a']
 start_parm = ''
 fail_page = []
+#清空临时表数据
+clear_tmp_data()
+#开始抓取数据
 for par_zm in par_zms:
     for i in range(1,100):
         keyword = 'zm='+par_zm+'&page='+str(i)
